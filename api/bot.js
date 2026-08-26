@@ -1,4 +1,5 @@
 const { buildAndDeployProject, cloneWebsiteFromUrl, replicateFromImage, modifyExistingProject } = require('../builder');
+const trainingEngine = require('../training_engine');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const allowedChatId = process.env.ALLOWED_CHAT_ID;
@@ -33,6 +34,8 @@ function getFullCommandDashboard(sender = 'Viswak') {
   return `🦁 *🔥 RAI RAI RAA RAA! ⚡ FULL AGENT COMMAND DASHBOARD* 🦁\n` +
     `━━━━━━━━━━━━━━━━━━━━━\n` +
     `Hello ${sender}! Here is your complete mission control center:\n\n` +
+    `🧠 *0. AGENT TRAINING & NEURAL BRAIN*\n` +
+    `   • Send \`/train\` or \`/knowledge\` to inspect active skill modules & training status\n\n` +
     `🌐 *1. URL INSTANT CLONER & ASSET SCRAPER*\n` +
     `   • Just paste any live website link (e.g. \`https://linear.app\` or \`https://stripe.com\`)\n` +
     `   • Agent scrapes DOM, colors, fonts, images & builds exact 3D replica!\n\n` +
@@ -80,6 +83,13 @@ module.exports = async (req, res) => {
     sendMessage: (cid, txt, opts) => sendTelegramMsg(cid, txt, opts && opts.parse_mode ? opts.parse_mode : ''),
   };
 
+  // 0. TRAINING & KNOWLEDGE COMMANDS
+  if (text === '/train' || text === '/knowledge' || /train/i.test(text)) {
+    const trainingReport = trainingEngine.getTrainingStatusSummary();
+    await sendTelegramMsg(chatId, trainingReport);
+    return res.status(200).send('OK');
+  }
+
   // 0. RAI RAI RAA RAA / JAI BALAYYA / TELUGU & ENGLISH MATCHER
   if (/rai\s*rai|రా|రై|balayya|బాలయ్య/i.test(text)) {
     const dashboard = getFullCommandDashboard(sender);
@@ -122,7 +132,7 @@ module.exports = async (req, res) => {
 
   // 4. Status
   if (text === '/status') {
-    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n• *Turbo State*: Armed (Rai Rai Raa Raa Active)\n━━━━━━━━━━━━━━━━━━━━━`);
+    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Training Status*: 6 Modules 100% Calibrated\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n• *Turbo State*: Armed (Rai Rai Raa Raa Active)\n━━━━━━━━━━━━━━━━━━━━━`);
     return res.status(200).send('OK');
   }
 
