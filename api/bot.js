@@ -29,6 +29,32 @@ function extractPart(raw, key) {
   return m ? m[1].trim() : '';
 }
 
+function getFullCommandDashboard(sender = 'Viswak') {
+  return `🦁 *🔥 RAI RAI RAA RAA! ⚡ FULL AGENT COMMAND DASHBOARD* 🦁\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `Hello ${sender}! Here is your complete mission control center:\n\n` +
+    `🌐 *1. URL INSTANT CLONER & ASSET SCRAPER*\n` +
+    `   • Just paste any live website link (e.g. \`https://linear.app\` or \`https://stripe.com\`)\n` +
+    `   • Agent scrapes DOM, colors, fonts, images & builds exact 3D replica!\n\n` +
+    `📸 *2. SCREENSHOT-TO-CODE VISION REPLICATOR*\n` +
+    `   • Upload any UI screenshot, photo, or wireframe\n` +
+    `   • Agent converts visual layout directly into clean responsive code!\n\n` +
+    `📋 *3. CUSTOM 5-W ARCHITECT BUILDER*\n` +
+    `   • Send \`/build\`\n` +
+    `   • Reply with (What, Who, Why, How, Where) to build bespoke platforms!\n\n` +
+    `🛠️ *4. LIVE ITERATION & CHANGE ENGINE*\n` +
+    `   • Send \`/change <instructions>\` (e.g. _"Make theme neon green and add pricing table"_)\n` +
+    `   • Agent updates code on GitHub & redeploys automatically!\n\n` +
+    `☁️ *5. CLOUD TELEMETRY & UPTIME*\n` +
+    `   • Send \`/status\` to check 24/7 serverless edge performance\n\n` +
+    `🛑 *6. RESET SESSION*\n` +
+    `   • Send \`/cancel\` or \`/reset\` anytime\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `👑 _"చరిత్ర రాయాలన్నా మేమే... తిరగరాయాలన్నా మేమే!"_\n\n` +
+    `👉 *What would you like to do right now?*\n` +
+    `_Paste a URL, send a photo, or type /build to start!_`;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(200).send('24/7 Universal AI Agent Webhook is Online!');
@@ -54,20 +80,10 @@ module.exports = async (req, res) => {
     sendMessage: (cid, txt, opts) => sendTelegramMsg(cid, txt, opts && opts.parse_mode ? opts.parse_mode : ''),
   };
 
-  // 0. SPECIAL OVERDRIVE: "RAI RAI RA RA" / "JAI BALAYYA"
-  if (/rai\s*rai\s*ra\s*ra|jai\s*balayya|balayya/i.test(text)) {
-    const massMsg = `🦁 *🔥 RAI RAI RAA RAA! JAI BALAYYA! 🔥* 🦁\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `⚡ *MAXIMUM OVERDRIVE SWARM MODE ACTIVATED!*\n\n` +
-      `• *Swarm Engines*: 6 Subagents at 1000% Turbo\n` +
-      `• *Repo Power*: All 43 Repositories Overclocked\n` +
-      `• *Build Speed*: Sub-second Synthesis & CDN Push\n` +
-      `• *Bug Defense*: Omni-Shield Active (0 Bugs Guaranteed)\n` +
-      `• *Status*: 24/7 Cloud Rampage Mode Online\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `👑 _"చరిత్ర రాయాలన్నా మేమే... తిరగరాయాలన్నా మేమే!"_\n\n` +
-      `👉 Send any *URL*, *Screenshot*, or \`/build\` to unleash full turbo power!`;
-    await sendTelegramMsg(chatId, massMsg);
+  // 0. RAI RAI RAA RAA / JAI BALAYYA / TELUGU & ENGLISH MATCHER
+  if (/rai\s*rai|రా|రై|balayya|బాలయ్య/i.test(text)) {
+    const dashboard = getFullCommandDashboard(sender);
+    await sendTelegramMsg(chatId, dashboard);
     return res.status(200).send('OK');
   }
 
@@ -83,7 +99,7 @@ module.exports = async (req, res) => {
     return res.status(200).send('OK');
   }
 
-  // 2. INCOMING URL DETECTED (Direct link or /clone <url>)
+  // 2. INCOMING URL DETECTED
   const urlMatch = text.match(/https?:\/\/[^\s]+/i);
   if (urlMatch) {
     const targetUrl = urlMatch[0];
@@ -99,22 +115,14 @@ module.exports = async (req, res) => {
 
   // 3. Start & Help
   if (text === '/start' || text === '/help') {
-    const welcome = `👋 *Hello ${sender}! Your 24/7 Universal Cloud AI Agent is Ready.*\n\n` +
-      `⚡ *Multi-Modal Creation Modes:*\n` +
-      `• 🌐 *Send Any URL* (e.g. \`https://linear.app\`) - Scrapes assets & builds exact replica!\n` +
-      `• 📸 *Send a Screenshot/Photo* - Converts UI design image into live code!\n` +
-      `• 📋 \`/build\` - 5-W Single-Message Architecture prompt\n` +
-      `• 🛠️ \`/change <instructions>\` - Modify & evolve your deployed project\n` +
-      `• 🦁 *Say "rai rai ra ra"* - Unleash Maximum Overdrive Turbo Mode!\n` +
-      `• ☁️ \`/status\` - Check 24/7 Serverless Uptime\n\n` +
-      `💡 *Works 24/7 in the cloud even when your PC is turned off!*`;
-    await sendTelegramMsg(chatId, welcome);
+    const dashboard = getFullCommandDashboard(sender);
+    await sendTelegramMsg(chatId, dashboard);
     return res.status(200).send('OK');
   }
 
   // 4. Status
   if (text === '/status') {
-    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n• *Turbo State*: Armed (Rai Rai Raa Raa)\n━━━━━━━━━━━━━━━━━━━━━`);
+    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n• *Turbo State*: Armed (Rai Rai Raa Raa Active)\n━━━━━━━━━━━━━━━━━━━━━`);
     return res.status(200).send('OK');
   }
 
