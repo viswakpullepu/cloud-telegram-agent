@@ -55,9 +55,9 @@ module.exports = async (req, res) => {
 
   // 1. Start & Help
   if (text === '/start' || text === '/help') {
-    const welcome = `👋 *Hello ${sender}! Your 24/7 Cloud AI Agent is Ready.* (Phase 2)\n\n` +
+    const welcome = `👋 *Hello ${sender}! Your 24/7 Cloud AI Agent is Ready.*\n\n` +
       `⚡ *Commands:*\n` +
-      `• \`/build\` - Start project with 5-W Single-Message Framework\n` +
+      `• \`/build\` - Start a new project using the 5-W Single-Message Framework\n` +
       `• \`/change <instructions>\` - Modify & evolve your deployed project\n` +
       `• \`/status\` - Check 24/7 Cloud Serverless Uptime\n` +
       `• \`/cancel\` - Reset session\n\n` +
@@ -68,7 +68,7 @@ module.exports = async (req, res) => {
 
   // 2. Status
   if (text === '/status') {
-    await sendTelegramMsg(chatId, `☁️ *24/7 SERVERLESS CLOUD TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Mode*: Phase 2 (5-W Regex Parser & Auto-Builder)\n• *PC Independence*: Active (Runs with PC off)\n• *GitHub Auth*: Connected (@${githubUsername})\n━━━━━━━━━━━━━━━━━━━━━`);
+    await sendTelegramMsg(chatId, `☁️ *24/7 SERVERLESS CLOUD TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Mode*: Phase 2 (5-W Parser & Iteration Engine)\n• *PC Status*: Independent (Runs 24/7)\n• *GitHub Auth*: Connected (@${githubUsername})\n━━━━━━━━━━━━━━━━━━━━━`);
     return res.status(200).send('OK');
   }
 
@@ -79,7 +79,30 @@ module.exports = async (req, res) => {
     return res.status(200).send('OK');
   }
 
-  // 4. Change / Iterate Command
+  // 4. Change / Iterate Command (Handles both `/change` and `/change <instructions>`)
+  if (text === '/change' || text === '/edit' || text === '/modify') {
+    global.cloudSessions.set(chatId, { status: 'WAITING_FOR_CHANGE' });
+    const lastRepo = global.lastDeployedRepo.get(chatId) || 'novasync';
+    await sendTelegramMsg(chatId, `🛠️ *What changes would you like to make to \`${lastRepo}\`?*\n\nReply directly with your instructions (e.g. _"Change theme to cyberpunk neon green and add a live chart"_).`);
+    return res.status(200).send('OK');
+  }
+
+  const session = global.cloudSessions.get(chatId);
+
+  if (session && session.status === 'WAITING_FOR_CHANGE') {
+    global.cloudSessions.delete(chatId);
+    const lastRepo = global.lastDeployedRepo.get(chatId) || 'novasync';
+    await modifyExistingProject({
+      changeRequest: text,
+      chatId,
+      bot: mockBot,
+      githubToken,
+      githubUsername,
+      lastRepo,
+    });
+    return res.status(200).send('OK');
+  }
+
   if (text.startsWith('/change ') || text.startsWith('/edit ') || text.startsWith('/modify ')) {
     const changeReq = text.replace(/^\/(change|edit|modify)\s+/i, '').trim();
     const lastRepo = global.lastDeployedRepo.get(chatId) || 'novasync';
@@ -106,15 +129,14 @@ module.exports = async (req, res) => {
       `4️⃣ *HOW* should it feel (e.g. 3D WebGL Torus/Globe, Luxury Dark Bento, Cyberpunk)?\n` +
       `5️⃣ *WHERE* is the target GitHub repo name? (Optional, e.g. \`novasync\`)\n\n` +
       `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `💡 *Tip:* You can write everything in a single message!`;
+      `💡 *Tip:* You can write everything in a single paragraph!`;
 
     await sendTelegramMsg(chatId, briefPrompt);
     return res.status(200).send('OK');
   }
 
-  // 6. Direct / Session 5-W Response Detection (Robust Inline Regex)
+  // 6. Direct / Session 5-W Response Detection
   const has5W = /(?:^|\b)(?:what|who|why|how|where)[:\s]/i.test(text);
-  const session = global.cloudSessions.get(chatId);
 
   if (has5W || (session && session.status === 'WAITING_FOR_5W')) {
     const what = extractPart(text, 'what') || text.slice(0, 60);
@@ -131,7 +153,6 @@ module.exports = async (req, res) => {
     global.cloudSessions.delete(chatId);
     global.lastDeployedRepo.set(chatId, where);
 
-    // CRITICAL: Await deployment completion before responding to Vercel
     await buildAndDeployProject({
       what,
       who,
