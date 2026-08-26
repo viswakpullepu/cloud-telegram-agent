@@ -1,4 +1,4 @@
-const { buildAndDeployProject, modifyExistingProject } = require('../builder');
+const { buildAndDeployProject, cloneWebsiteFromUrl, replicateFromImage, modifyExistingProject } = require('../builder');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const allowedChatId = process.env.ALLOWED_CHAT_ID;
@@ -31,17 +31,18 @@ function extractPart(raw, key) {
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(200).send('24/7 Serverless AI Agent Webhook is Online!');
+    return res.status(200).send('24/7 Universal AI Agent Webhook is Online!');
   }
 
   const update = req.body;
-  if (!update || !update.message || !update.message.text) {
+  if (!update || !update.message) {
     return res.status(200).send('OK');
   }
 
   const msg = update.message;
   const chatId = msg.chat.id.toString();
-  const text = msg.text.trim();
+  const text = (msg.text || '').trim();
+  const caption = (msg.caption || '').trim();
   const sender = msg.from.first_name || 'User';
 
   if (allowedChatId && chatId !== allowedChatId) {
@@ -53,37 +54,64 @@ module.exports = async (req, res) => {
     sendMessage: (cid, txt, opts) => sendTelegramMsg(cid, txt, opts && opts.parse_mode ? opts.parse_mode : ''),
   };
 
-  // 1. Start & Help
+  // 1. INCOMING PHOTO / SCREENSHOT DETECTION
+  if (msg.photo && msg.photo.length > 0) {
+    await replicateFromImage({
+      photoCaption: caption || 'UI Screenshot Replica',
+      chatId,
+      bot: mockBot,
+      githubToken,
+      githubUsername,
+    });
+    return res.status(200).send('OK');
+  }
+
+  // 2. INCOMING URL DETECTED (Direct link or /clone <url>)
+  const urlMatch = text.match(/https?:\/\/[^\s]+/i);
+  if (urlMatch) {
+    const targetUrl = urlMatch[0];
+    await cloneWebsiteFromUrl({
+      targetUrl,
+      chatId,
+      bot: mockBot,
+      githubToken,
+      githubUsername,
+    });
+    return res.status(200).send('OK');
+  }
+
+  // 3. Start & Help
   if (text === '/start' || text === '/help') {
-    const welcome = `👋 *Hello ${sender}! Your 24/7 Cloud AI Agent is Ready.*\n\n` +
-      `⚡ *Commands:*\n` +
-      `• \`/build\` - Start a new project using the 5-W Single-Message Framework\n` +
-      `• \`/change <instructions>\` - Modify & evolve your deployed project\n` +
-      `• \`/status\` - Check 24/7 Cloud Serverless Uptime\n` +
-      `• \`/cancel\` - Reset session\n\n` +
-      `💡 *Runs 24/7 in the cloud even when your PC is turned off!*`;
+    const welcome = `👋 *Hello ${sender}! Your 24/7 Universal Cloud AI Agent is Ready.*\n\n` +
+      `⚡ *Multi-Modal Creation Modes:*\n` +
+      `• 🌐 *Send Any URL* (e.g. \`https://linear.app\`) - Scrapes assets & builds exact replica!\n` +
+      `• 📸 *Send a Screenshot/Photo* - Converts UI design image into live code!\n` +
+      `• 📋 \`/build\` - 5-W Single-Message Architecture prompt\n` +
+      `• 🛠️ \`/change <instructions>\` - Modify & evolve your deployed project\n` +
+      `• ☁️ \`/status\` - Check 24/7 Serverless Uptime\n\n` +
+      `💡 *Works 24/7 in the cloud even when your PC is turned off!*`;
     await sendTelegramMsg(chatId, welcome);
     return res.status(200).send('OK');
   }
 
-  // 2. Status
+  // 4. Status
   if (text === '/status') {
-    await sendTelegramMsg(chatId, `☁️ *24/7 SERVERLESS CLOUD TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Mode*: Phase 2 (5-W Parser & Iteration Engine)\n• *PC Status*: Independent (Runs 24/7)\n• *GitHub Auth*: Connected (@${githubUsername})\n━━━━━━━━━━━━━━━━━━━━━`);
+    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n━━━━━━━━━━━━━━━━━━━━━`);
     return res.status(200).send('OK');
   }
 
-  // 3. Cancel
+  // 5. Cancel
   if (text === '/cancel' || text === '/reset') {
     global.cloudSessions.delete(chatId);
-    await sendTelegramMsg(chatId, '✓ Session reset. Type `/build` whenever you are ready to start fresh!', '');
+    await sendTelegramMsg(chatId, '✓ Session reset. Send a URL, Image, or `/build` to start fresh!', '');
     return res.status(200).send('OK');
   }
 
-  // 4. Change / Iterate Command (Handles both `/change` and `/change <instructions>`)
+  // 6. Change / Iterate Command
   if (text === '/change' || text === '/edit' || text === '/modify') {
     global.cloudSessions.set(chatId, { status: 'WAITING_FOR_CHANGE' });
     const lastRepo = global.lastDeployedRepo.get(chatId) || 'novasync';
-    await sendTelegramMsg(chatId, `🛠️ *What changes would you like to make to \`${lastRepo}\`?*\n\nReply directly with your instructions (e.g. _"Change theme to cyberpunk neon green and add a live chart"_).`);
+    await sendTelegramMsg(chatId, `🛠️ *What changes would you like to make to \`${lastRepo}\`?*\n\nReply directly with your instructions.`);
     return res.status(200).send('OK');
   }
 
@@ -117,37 +145,37 @@ module.exports = async (req, res) => {
     return res.status(200).send('OK');
   }
 
-  // 5. Build prompt
+  // 7. Build prompt
   if (text === '/build' || text === 'build') {
     global.cloudSessions.set(chatId, { status: 'WAITING_FOR_5W' });
 
-    const briefPrompt = `📋 *PHASE 2: PROJECT ARCHITECTURE BRIEF (5-W FRAMEWORK)*\n━━━━━━━━━━━━━━━━━━━━━\n` +
-      `Hello ${sender}! Reply to this message with your project answers in *one single text*:\n\n` +
+    const briefPrompt = `📋 *PROJECT ARCHITECTURE BRIEF (5-W FRAMEWORK)*\n━━━━━━━━━━━━━━━━━━━━━\n` +
+      `Hello ${sender}! You can also send a *URL* or *Screenshot* directly!\n\n` +
+      `Or reply with:\n` +
       `1️⃣ *WHAT* is the Project Name & core features?\n` +
-      `2️⃣ *WHO* is the target audience (e.g. crypto traders, gamers, enterprise, students)?\n` +
-      `3️⃣ *WHY* does it exist / what main value does it offer?\n` +
-      `4️⃣ *HOW* should it feel (e.g. 3D WebGL Torus/Globe, Luxury Dark Bento, Cyberpunk)?\n` +
-      `5️⃣ *WHERE* is the target GitHub repo name? (Optional, e.g. \`novasync\`)\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `💡 *Tip:* You can write everything in a single paragraph!`;
+      `2️⃣ *WHO* is the target audience?\n` +
+      `3️⃣ *WHY* does it exist / main value?\n` +
+      `4️⃣ *HOW* should it feel (3D WebGL, Dark Bento, Cyberpunk)?\n` +
+      `5️⃣ *WHERE* is the target repo name?\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━━`;
 
     await sendTelegramMsg(chatId, briefPrompt);
     return res.status(200).send('OK');
   }
 
-  // 6. Direct / Session 5-W Response Detection
+  // 8. 5-W Response Detection
   const has5W = /(?:^|\b)(?:what|who|why|how|where)[:\s]/i.test(text);
 
   if (has5W || (session && session.status === 'WAITING_FOR_5W')) {
     const what = extractPart(text, 'what') || text.slice(0, 60);
-    const who = extractPart(text, 'who') || 'Distributed Systems & MLOps Architects';
+    const who = extractPart(text, 'who') || 'Universal Audience';
     const why = extractPart(text, 'why') || text;
-    const how = extractPart(text, 'how') || 'Dark Glassmorphic Bento UI + 3D WebGL Globe with Cobalt & Amber';
+    const how = extractPart(text, 'how') || '3D WebGL Luxury Dark Bento UI';
     let where = extractPart(text, 'where');
 
     if (!where) {
       const firstWord = what.split(/[–-—:\s]/)[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-      where = firstWord && firstWord.length > 2 ? firstWord : 'novasync';
+      where = firstWord && firstWord.length > 2 ? firstWord : `app-${Date.now()}`;
     }
 
     global.cloudSessions.delete(chatId);
