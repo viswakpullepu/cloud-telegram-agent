@@ -54,6 +54,23 @@ module.exports = async (req, res) => {
     sendMessage: (cid, txt, opts) => sendTelegramMsg(cid, txt, opts && opts.parse_mode ? opts.parse_mode : ''),
   };
 
+  // 0. SPECIAL OVERDRIVE: "RAI RAI RA RA" / "JAI BALAYYA"
+  if (/rai\s*rai\s*ra\s*ra|jai\s*balayya|balayya/i.test(text)) {
+    const massMsg = `🦁 *🔥 RAI RAI RAA RAA! JAI BALAYYA! 🔥* 🦁\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ *MAXIMUM OVERDRIVE SWARM MODE ACTIVATED!*\n\n` +
+      `• *Swarm Engines*: 6 Subagents at 1000% Turbo\n` +
+      `• *Repo Power*: All 43 Repositories Overclocked\n` +
+      `• *Build Speed*: Sub-second Synthesis & CDN Push\n` +
+      `• *Bug Defense*: Omni-Shield Active (0 Bugs Guaranteed)\n` +
+      `• *Status*: 24/7 Cloud Rampage Mode Online\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `👑 _"చరిత్ర రాయాలన్నా మేమే... తిరగరాయాలన్నా మేమే!"_\n\n` +
+      `👉 Send any *URL*, *Screenshot*, or \`/build\` to unleash full turbo power!`;
+    await sendTelegramMsg(chatId, massMsg);
+    return res.status(200).send('OK');
+  }
+
   // 1. INCOMING PHOTO / SCREENSHOT DETECTION
   if (msg.photo && msg.photo.length > 0) {
     await replicateFromImage({
@@ -88,6 +105,7 @@ module.exports = async (req, res) => {
       `• 📸 *Send a Screenshot/Photo* - Converts UI design image into live code!\n` +
       `• 📋 \`/build\` - 5-W Single-Message Architecture prompt\n` +
       `• 🛠️ \`/change <instructions>\` - Modify & evolve your deployed project\n` +
+      `• 🦁 *Say "rai rai ra ra"* - Unleash Maximum Overdrive Turbo Mode!\n` +
       `• ☁️ \`/status\` - Check 24/7 Serverless Uptime\n\n` +
       `💡 *Works 24/7 in the cloud even when your PC is turned off!*`;
     await sendTelegramMsg(chatId, welcome);
@@ -96,7 +114,7 @@ module.exports = async (req, res) => {
 
   // 4. Status
   if (text === '/status') {
-    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n━━━━━━━━━━━━━━━━━━━━━`);
+    await sendTelegramMsg(chatId, `☁️ *24/7 UNIVERSAL AGENT TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Modes*: URL Cloner • Image-to-Code • 5-W Builder\n• *QA Bug Auditor*: Active (Zero-Defect Guaranteed)\n• *GitHub Auth*: Connected (@${githubUsername})\n• *Turbo State*: Armed (Rai Rai Raa Raa)\n━━━━━━━━━━━━━━━━━━━━━`);
     return res.status(200).send('OK');
   }
 
