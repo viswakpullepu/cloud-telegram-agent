@@ -1,25 +1,10 @@
-const { buildAndDeployProject } = require('../builder');
+const { buildAndDeployProject, modifyExistingProject } = require('../builder');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const allowedChatId = process.env.ALLOWED_CHAT_ID;
 const githubToken = process.env.GITHUB_TOKEN;
 const githubUsername = process.env.GITHUB_USERNAME || 'viswakpullepu';
 const apiUrl = `https://api.telegram.org/bot${token}`;
-
-const interviewQuestions = [
-  { id: 1, title: '[1/12] PROJECT IDENTITY AND NAME', question: "What is the Project Name and primary Tagline/Slogan?\n\nExample: 'AetherAI - Autonomous Multi-Agent Swarm for Web3 Security'" },
-  { id: 2, title: '[2/12] PURPOSE AND TARGET AUDIENCE', question: "What is the core purpose of this website, and who is your primary audience?\n\nExample: 'Enterprise cybersecurity teams, developers, collegiate CTF competitors, crypto traders...'" },
-  { id: 3, title: '[3/12] VISUAL AND AESTHETIC THEME', question: "Which visual theme do you prefer? (Reply 1, 2, 3, or type your own)\n\n1. Apple/Vercel Luxury Dark Bento Grid\n2. Cyberpunk / Hacker OS (High-contrast neon green/cyan)\n3. Linear / Stripe Minimalist Editorial\n4. Neo-Brutalist Web3" },
-  { id: 4, title: '[4/12] 3D WEBGL CENTERPIECE', question: "What kind of 3D WebGL centerpiece experience would you like?\n\n1. 3D Rotating Cryptographic Globe / Sphere\n2. 3D Interactive Torus Knot / Particle Vortex\n3. 3D Floating Glass Cards\n4. Clean minimal ambient gradient glow" },
-  { id: 5, title: '[5/12] COLOR PALETTE AND ACCENTS', question: "What color palette and accent glow should we use?\n\n1. Obsidian Void + Cyber Cyan & Emerald\n2. Deep Violet + Electric Pink\n3. Gold / Amber + Stealth Slate\n4. Custom palette" },
-  { id: 6, title: '[6/12] HERO SECTION HEADLINE AND CTAs', question: "What exact Headline and Action Buttons do you want in the Hero section?\n\nExample:\nHeadline: 'WHERE ELITE MINDS CONQUER CODE'\nCTA 1: 'LAUNCH TERMINAL'\nCTA 2: 'EXPLORE PROTOCOL'" },
-  { id: 7, title: '[7/12] TELEMETRY AND STATS METRICS', question: "What key stats or metric numbers should be highlighted?\n\nExample: '100+ Active Members', '45+ CTFs Dominated', '99.9% Uptime'" },
-  { id: 8, title: '[8/12] CORE FEATURES AND PILLARS', question: "List 3 to 4 core features or pillars to showcase in the Bento Grid:\n\nExample:\n1. Web & API Exploitation\n2. Reverse Engineering\n3. Cryptography & ZK Proofs\n4. Digital Forensics" },
-  { id: 9, title: '[9/12] INTERACTIVE SANDBOX AND WIDGETS', question: "Which interactive widget should we build into the page?\n\n1. Live Working Terminal CLI\n2. Live Radar Threat Scanner / Syslog feed\n3. Interactive Calculator\n4. All of the above!" },
-  { id: 10, title: '[10/12] LEADERSHIP, TEAM AND ADVISORS', question: "Would you like a Leadership / Team roster section? (Yes/No or names)" },
-  { id: 11, title: '[11/12] LEAD CAPTURE AND CONTACT FORM', question: "What kind of form should be at the bottom?\n\n1. Member Enrollment Packet form\n2. Waitlist / Newsletter Email signup\n3. Direct Discord/Telegram join\n4. Custom form" },
-  { id: 12, title: '[12/12] GITHUB REPO NAME', question: "What is your target GitHub Repository name?\n\nExample: 'my-cyber-app' or 'Generate unique repo name'" }
-];
 
 async function sendTelegramMsg(chatId, text, parseMode = 'Markdown') {
   const axios = require('axios');
@@ -35,8 +20,8 @@ async function sendTelegramMsg(chatId, text, parseMode = 'Markdown') {
   });
 }
 
-// Global serverless memory
 global.cloudSessions = global.cloudSessions || new Map();
+global.lastDeployedRepo = global.lastDeployedRepo || new Map();
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -62,63 +47,124 @@ module.exports = async (req, res) => {
     sendMessage: (cid, txt, opts) => sendTelegramMsg(cid, txt, opts && opts.parse_mode ? opts.parse_mode : ''),
   };
 
+  // 1. Help & Start
   if (text === '/start' || text === '/help') {
-    await sendTelegramMsg(chatId, `👋 *Hello ${sender}! Your 100% Free 24/7 Cloud AI Agent is Online.*\n\n⚡ *Cloud Commands:*\n• \`/build\` - Start 12-Question Project Architect Interview\n• \`/status\` - Check 24/7 Serverless Uptime\n• \`/cancel\` - Reset session\n\n💡 *Hosted on Vercel Serverless — Runs 24/7 even when your PC is off!*`);
+    const welcome = `👋 *Hello ${sender}! Your 24/7 Cloud AI Agent is Ready.* (Phase 2)\n\n` +
+      `⚡ *Commands:*\n` +
+      `• \`/build\` - Start a new project using the 5-W Architecture Framework\n` +
+      `• \`/change <instructions>\` - Modify & iterate on your deployed project\n` +
+      `• \`/status\` - Check 24/7 Cloud Uptime\n` +
+      `• \`/cancel\` - Reset session\n\n` +
+      `💡 *Runs 24/7 in the cloud even when your PC is turned off!*`;
+    await sendTelegramMsg(chatId, welcome);
     return res.status(200).send('OK');
   }
 
+  // 2. Status
   if (text === '/status') {
-    await sendTelegramMsg(chatId, `☁️ *24/7 SERVERLESS CLOUD TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Status*: 24/7 Online\n• *PC Status*: Independent (PC can be off)\n• *GitHub Auth*: Connected (@${githubUsername})\n• *Uptime*: 100% Guaranteed\n━━━━━━━━━━━━━━━━━━━━━`);
+    await sendTelegramMsg(chatId, `☁️ *24/7 SERVERLESS CLOUD TELEMETRY*\n━━━━━━━━━━━━━━━━━━━━━\n• *Platform*: Vercel Serverless (100% Free)\n• *Mode*: Phase 2 (5-W Framework + Iterative Refinement)\n• *PC Independence*: Active (Runs with PC off)\n• *GitHub Auth*: Connected (@${githubUsername})\n━━━━━━━━━━━━━━━━━━━━━`);
     return res.status(200).send('OK');
   }
 
+  // 3. Cancel
   if (text === '/cancel' || text === '/reset') {
     global.cloudSessions.delete(chatId);
     await sendTelegramMsg(chatId, '✓ Session reset. Type `/build` whenever you are ready to start fresh!', '');
     return res.status(200).send('OK');
   }
 
-  if (text === '/build' || text === 'build') {
+  // 4. Change / Iterate Command
+  if (text.startsWith('/change ') || text.startsWith('/edit ') || text.startsWith('/modify ')) {
+    const changeReq = text.replace(/^\/(change|edit|modify)\s+/i, '').trim();
+    const lastRepo = global.lastDeployedRepo.get(chatId) || 'jai-balayya';
+    await modifyExistingProject({
+      changeRequest: changeReq,
+      chatId,
+      bot: mockBot,
+      githubToken,
+      githubUsername,
+      lastRepo,
+    });
+    return res.status(200).send('OK');
+  }
+
+  // 5. Build Command (Single-Message 5-W Briefing Prompt)
+  if (text === '/build' || text === 'build' || text.startsWith('/build start')) {
     global.cloudSessions.set(chatId, {
-      currentStep: 0,
-      answers: {},
-      status: 'IN_PROGRESS',
+      status: 'WAITING_FOR_5W',
     });
 
-    const q1 = interviewQuestions[0];
-    await sendTelegramMsg(chatId, `🚀 *24/7 CLOUD PROJECT ARCHITECT INTERVIEW INITIATED*\n━━━━━━━━━━━━━━━━━━━━━\nHello ${sender}! Let's craft your website specification (12 questions).\n\nType \`/cancel\` at any time.\n━━━━━━━━━━━━━━━━━━━━━\n\n*${q1.title}*\n${q1.question}`);
+    const briefPrompt = `📋 *PHASE 2: PROJECT ARCHITECTURE BRIEF (5-W FRAMEWORK)*\n━━━━━━━━━━━━━━━━━━━━━\n` +
+      `Hello ${sender}! Reply to this message with your project answers in *one single text*:\n\n` +
+      `1️⃣ *WHAT* is the Project Name & core features?\n` +
+      `2️⃣ *WHO* is the target audience (e.g. crypto traders, gamers, enterprise, students)?\n` +
+      `3️⃣ *WHY* does it exist / what main value does it offer?\n` +
+      `4️⃣ *HOW* should it feel (e.g. 3D WebGL Torus/Globe, Luxury Dark Bento, Cyberpunk)?\n` +
+      `5️⃣ *WHERE* is the target GitHub repo name? (e.g. \`cyber-vault\`)\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `💡 *Example Reply:*\n` +
+      `_What: AetherAI multi-agent security platform_\n` +
+      `_Who: Web3 & Cyber researchers_\n` +
+      `_Why: Autonomous smart contract fuzzing_\n` +
+      `_How: 3D interactive knot + Obsidian Cyan theme_\n` +
+      `_Where: aether-security_`;
+
+    await sendTelegramMsg(chatId, briefPrompt);
     return res.status(200).send('OK');
   }
 
   const session = global.cloudSessions.get(chatId);
 
-  if (session && session.status === 'IN_PROGRESS') {
-    const step = session.currentStep;
-    session.answers[`q${step + 1}`] = text;
-    session.currentStep = step + 1;
+  // 6. Parsing the 5-W Single-Message Response
+  if (session && session.status === 'WAITING_FOR_5W') {
+    const raw = text;
+    
+    // Extract 5-W components or parse smartly
+    let what = '', who = '', why = '', how = '', where = '';
 
-    if (session.currentStep < interviewQuestions.length) {
-      const nextQ = interviewQuestions[session.currentStep];
-      await sendTelegramMsg(chatId, `✓ *Recorded!*\n\n*${nextQ.title}*\n${nextQ.question}`);
-    } else {
-      session.status = 'COMPLETED';
-      const ans = session.answers;
-      const summary = `🎉 *SPECIFICATION BRIEF COMPLETE!*\n━━━━━━━━━━━━━━━━━━━━━\n1. Project Name: ${ans.q1}\n2. Purpose/Audience: ${ans.q2}\n3. Aesthetic Theme: ${ans.q3}\n4. 3D WebGL Core: ${ans.q4}\n5. Color Palette: ${ans.q5}\n6. Hero Headline: ${ans.q6}\n7. Key Metrics: ${ans.q7}\n8. Core Features: ${ans.q8}\n9. Interactive Sandboxes: ${ans.q9}\n10. Leadership/Team: ${ans.q10}\n11. Lead Form: ${ans.q11}\n12. Target Repo: ${ans.q12}\n━━━━━━━━━━━━━━━━━━━━━\n\n🚀 Type \`/proceed\` to begin 24/7 cloud code synthesis, GitHub push, and live deployment!`;
-      await sendTelegramMsg(chatId, summary);
+    const lines = raw.split('\n');
+    lines.forEach((l) => {
+      if (/^1|what/i.test(l)) what = l.replace(/^1[.)\s]*|what[:\s-]*/i, '').trim();
+      else if (/^2|who/i.test(l)) who = l.replace(/^2[.)\s]*|who[:\s-]*/i, '').trim();
+      else if (/^3|why/i.test(l)) why = l.replace(/^3[.)\s]*|why[:\s-]*/i, '').trim();
+      else if (/^4|how/i.test(l)) how = l.replace(/^4[.)\s]*|how[:\s-]*/i, '').trim();
+      else if (/^5|where/i.test(l)) where = l.replace(/^5[.)\s]*|where[:\s-]*/i, '').trim();
+    });
+
+    if (!what && raw.length > 5) {
+      what = raw.slice(0, 50);
+      why = raw;
+      who = 'General Audience';
+      how = '3D WebGL Luxury Dark Bento';
+      where = 'apex-app';
     }
+
+    // Validation: Check if anything critical is missing
+    if (!what) {
+      await sendTelegramMsg(chatId, '⚠️ Please provide at least the *Project Name & Idea* (WHAT). Reply with your project details!');
+      return res.status(200).send('OK');
+    }
+
+    global.cloudSessions.delete(chatId);
+    
+    // Save target repo for subsequent /change iterations
+    const targetRepo = where ? where.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase() : 'apex-app';
+    global.lastDeployedRepo.set(chatId, targetRepo);
+
+    // Launch Autonomous Cloud Build
+    buildAndDeployProject({
+      what: what || 'Apex Digital Realm',
+      who: who || 'Creators & Developers',
+      why: why || 'Next-generation interactive web experience',
+      how: how || '3D WebGL Luxury Dark Bento Grid',
+      where: targetRepo,
+      chatId,
+      bot: mockBot,
+      githubToken,
+      githubUsername,
+    });
+
     return res.status(200).send('OK');
-  }
-
-  if (text === '/proceed' || text === 'proceed') {
-    if (session && session.status === 'COMPLETED') {
-      const answers = session.answers;
-      global.cloudSessions.delete(chatId);
-      buildAndDeployProject({ answers, chatId, bot: mockBot, githubToken, githubUsername });
-      return res.status(200).send('OK');
-    } else {
-      await sendTelegramMsg(chatId, 'No completed interview found. Type `/build` to start a new project specification!', '');
-      return res.status(200).send('OK');
-    }
   }
 
   return res.status(200).send('OK');
