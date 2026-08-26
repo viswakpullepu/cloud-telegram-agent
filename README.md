@@ -1,19 +1,23 @@
-# ☁️ 24/7 Cloud Autonomous Telegram AI Agent
+# ☁️ 24/7 Cloud Autonomous Telegram AI Agent (100% Free on Vercel)
 
-This agent runs **24/7 continuously in the cloud**—allowing you to interview, build, commit to GitHub, and deploy live websites directly from your phone even when your personal computer is turned off.
+This agent runs **24/7 continuously in the cloud for 100% free**—allowing you to interview, build, commit to GitHub, and deploy live websites directly from your phone even when your personal computer is turned off.
 
 ---
 
-## ⚡ 1-Minute 100% Free 24/7 Cloud Setup on Render.com:
+## ⚡ 1-Minute 100% Free Setup on Vercel:
 
-1. Go to **[render.com](https://render.com)** and sign in with your GitHub account (`viswakpullepu`).
-2. Click **+ New** > **Background Worker** (or **Web Service**).
-3. Connect your repository: **`viswakpullepu/cloud-telegram-agent`**.
-4. Set the Environment Variables:
+1. Open **[https://vercel.com/new](https://vercel.com/new)** and click **Continue with GitHub** (`viswakpullepu`).
+2. Click **Import** next to your repository: **`viswakpullepu/cloud-telegram-agent`**.
+3. Under **Environment Variables**, add these 4 keys:
    - `TELEGRAM_BOT_TOKEN`: Your Telegram Bot Token from `@BotFather`
-   - `ALLOWED_CHAT_ID`: Your Telegram Chat ID
+   - `ALLOWED_CHAT_ID`: `7312591748`
    - `GITHUB_TOKEN`: Your GitHub Personal Access Token
    - `GITHUB_USERNAME`: `viswakpullepu`
-5. Click **Create Web Service / Worker**.
+4. Click **Deploy**! (Takes ~20 seconds).
+5. Copy your deployed Vercel domain (e.g., `https://cloud-telegram-agent-xxx.vercel.app`).
+6. Set the Telegram Webhook by opening this URL in your browser:
+   `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://YOUR-VERCEL-DOMAIN.vercel.app/api/bot`
 
-That's it! Your agent is now running **24/7 in the cloud**. You can shut down your PC, go anywhere in the world, and send `/build` on Telegram from your phone!
+---
+
+🎉 **Done!** Your bot is now 100% serverless, free forever, and runs 24/7/365 in the cloud!
